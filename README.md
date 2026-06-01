@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shipping App - El Loco Casaca
 
-## Getting Started
+App de gestión de envíos del marketplace "El Loco Casaca". Es una de las 5 webapps del proyecto y se ocupa de la parte logística: registrar envíos, actualizar estados, ver el historial de tracking y avisar a Feedback cuando un envío se entrega.
 
-First, run the development server:
+## Link de producción
+https://proyecto-c-shipping2-ellococasaca.vercel.app
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Usuarios de prueba
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `logistics+clerk_test@iaw.com` (operador logístico)
+- `admin+clerk_test@iaw.com` (administrador)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Contraseña para los dos: `iawuser#`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Cómo usarla
 
-## Learn More
+Entrando al link redirige al login de Clerk. Logueando con cualquiera de los usuarios de arriba se accede al panel, donde está la tabla de envíos con busqueda, filtro por estado y paginacion (todo manejado por parámetros en la URL).
 
-To learn more about Next.js, take a look at the following resources:
+Haciendo click en "Ver" en una fila se abre el detalle del envio con el historial completo y un form para cambiar el estado. Si se cambia a DELIVERED, se dispara la llamada (mockeada) a la Feedback App.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Endpoints de la API
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Pensados para que las otras apps los consuman en Etapa 3. Por ahora están sin auth para que luego se llamen vía JWT entre servicios.
 
-## Deploy on Vercel
+- `GET /api/shipments` - listado con filtros (`sellerId`, `status`, `page`, `limit`)
+- `POST /api/shipments` - crear envío (lo llama Payments tras un pago aprobado)
+- `GET /api/shipments/{id}/tracking` - seguimiento del envío
+- `PATCH /api/shipments/{id}/status` - cambiar el estado (lo usa el panel)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 16 (App Router) + TypeScript + Tailwind
+- PostgreSQL en Neon 
+- Prisma 6 como ORM
+- Clerk para autenticación
+- Zod para validaciones
+- Vercel para el deploy
+
+## Notas
+
+- El mock de Feedback se ejecuta cada vez que un envío pasa a DELIVERED, ya sea desde el panel o via el endpoint PATCH. El "log" aparece en los runtime logs de Vercel.
+- Solo el panel (`/panel/*`) está protegido con Clerk.
+- Hay 15 envíos cargados como datos de prueba, cubriendo todos los estados (PENDING, PREPARING, SHIPPED, IN_TRANSIT, DELIVERED, CANCELED) y con vendedores/compradores/ciudades diferentes. 
