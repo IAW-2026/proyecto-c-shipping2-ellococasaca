@@ -8,6 +8,7 @@ https://proyecto-c-shipping2-ellococasaca.vercel.app
 ## Usuarios de prueba
 
 - `logistics+clerk_test@iaw.com` (operador logístico)
+Para despues:
 - `admin+clerk_test@iaw.com` (administrador)
 
 Contraseña para los dos: `iawuser#`

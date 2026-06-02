@@ -4,13 +4,23 @@ import { Prisma, ShipmentStatus } from "@prisma/client";
 
 const STATUS_OPTIONS = ["", "PENDING", "PREPARING", "SHIPPED", "IN_TRANSIT", "DELIVERED", "CANCELED"];
 
-const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-gray-100 text-gray-700",
-  PREPARING: "bg-amber-100 text-amber-800",
-  SHIPPED: "bg-blue-100 text-blue-800",
-  IN_TRANSIT: "bg-indigo-100 text-indigo-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  CANCELED: "bg-red-100 text-red-800",
+const STATUS_DOTS: Record<string, string> = {
+  PENDING: "bg-slate-400",
+  PREPARING: "bg-amber-500",
+  SHIPPED: "bg-sky-500",
+  IN_TRANSIT: "bg-indigo-500",
+  DELIVERED: "bg-emerald-500",
+  CANCELED: "bg-rose-500",
+};
+
+//Mantengo lo acordado en los archivos .md
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pendiente",
+  PREPARING: "Preparando",
+  SHIPPED: "Despachado",
+  IN_TRANSIT: "En tránsito",
+  DELIVERED: "Entregado",
+  CANCELED: "Cancelado",
 };
 
 const PAGE_SIZE = 10;
@@ -60,8 +70,8 @@ export default async function PanelPage({
   return (
     <main className="mx-auto max-w-6xl p-6">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Panel de envíos</h1>
-        <p className="text-sm text-gray-500">Gestión y seguimiento — El Loco Casaca</p>
+        <h1 className="text-3xl font-bold tracking-tight text-red-600">Panel de envíos</h1>
+  <p className="text-sm text-gray-500">Gestión y seguimiento — El Loco Casaca</p>
       </header>
 
       <form method="get" className="mb-4 flex flex-wrap items-end gap-3">
@@ -75,7 +85,7 @@ export default async function PanelPage({
           <select id="status" name="status" defaultValue={status ?? ""}
             className="rounded border border-gray-300 px-3 py-2 text-sm">
             {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>{s === "" ? "Todos" : s}</option>
+              <option key={s} value={s}>{s === "" ? "Todos" : STATUS_LABELS[s] ?? s}</option>
             ))}
           </select>
         </div>
@@ -109,8 +119,9 @@ export default async function PanelPage({
                   <td className="px-4 py-3">{s.orderId}</td>
                   <td className="px-4 py-3 text-gray-500">{s.buyerId}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[s.status] ?? ""}`}>
-                      {s.status}
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
+                    <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOTS[s.status] ?? "bg-slate-400"}`}></span>
+                    {STATUS_LABELS[s.status] ?? s.status}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500">
