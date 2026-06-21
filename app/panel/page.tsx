@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Prisma, ShipmentStatus } from "@prisma/client";
@@ -30,6 +31,7 @@ export default async function PanelPage({
 }: {
   searchParams: Promise<{ q?: string; status?: string; page?: string }>;
 }) {
+  await requireRole("admin");
   const { q, status, page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam ?? "1"));
 

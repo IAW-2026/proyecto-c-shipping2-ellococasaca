@@ -19,8 +19,9 @@ model Shipment {
   id                String          @id @default(cuid())
   orderId           String          @map("order_id")
   chargeId          String?         @map("charge_id")
-  buyerId           String          @map("buyer_id")   // Clerk ID
-  sellerId          String          @map("seller_id")  // Clerk ID
+  buyerId           String          @map("buyer_id") 
+  sellerId          String          @map("seller_id")  
+  courierId         String?
   status            ShipmentStatus  @default(PENDING)
   trackingCode      String          @unique @map("tracking_code")
   estimatedDelivery DateTime?       @map("estimated_delivery")

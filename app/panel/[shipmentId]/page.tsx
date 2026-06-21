@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { StatusForm } from "./StatusForm";
+import { requireRole, listCouriers } from "@/lib/auth";
+import CourierAssignForm from "./CourierAssignForm";
 
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-gray-100 text-gray-700",
@@ -11,6 +13,8 @@ const STATUS_STYLES: Record<string, string> = {
   DELIVERED: "bg-green-100 text-green-800",
   CANCELED: "bg-red-100 text-red-800",
 };
+
+const NON_REASSIGNABLE_STATUSES = ["IN_TRANSIT", "DELIVERED", "CANCELED"];
 
 type AddressSnapshot = {
   street?: string; city?: string; province?: string;
@@ -22,16 +26,26 @@ export default async function ShipmentDetailPage({
 }: {
   params: Promise<{ shipmentId: string }>;
 }) {
-  const { shipmentId } = await params;
+  
+  await requireRole("admin");
 
-  const shipment = await prisma.shipment.findUnique({
+const { shipmentId } = await params;
+
+const [shipment, couriers] = await Promise.all([
+  prisma.shipment.findUnique({
     where: { id: shipmentId },
     include: { events: { orderBy: { timestamp: "desc" } } },
-  });
+  }),
+  listCouriers(),
+]);
 
-  if (!shipment) notFound();
+if (!shipment) notFound();
 
-  const addr = (shipment.addressSnapshot ?? {}) as AddressSnapshot;
+const addr = (shipment.addressSnapshot ?? {}) as AddressSnapshot;
+const currentCourier =
+  couriers.find((c) => c.id === shipment.courierId) ?? null;
+const isLocked = NON_REASSIGNABLE_STATUSES.includes(shipment.status);
+ 
 
   return (
     <main className="mx-auto max-w-4xl p-6">
@@ -52,12 +66,20 @@ export default async function ShipmentDetailPage({
       <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded border border-gray-200 p-4">
           <h2 className="mb-2 text-sm font-semibold text-gray-700">Datos del envío</h2>
+          
           <dl className="space-y-1 text-sm">
-            <div className="flex justify-between"><dt className="text-gray-500">Comprador</dt><dd className="font-mono text-xs">{shipment.buyerId}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Vendedor</dt><dd className="font-mono text-xs">{shipment.sellerId}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Entrega estimada</dt><dd>{shipment.estimatedDelivery ? new Date(shipment.estimatedDelivery).toLocaleDateString("es-AR") : "—"}</dd></div>
-            <div className="flex justify-between"><dt className="text-gray-500">Creado</dt><dd>{new Date(shipment.createdAt).toLocaleString("es-AR")}</dd></div>
+           <div className="flex justify-between"><dt className="text-gray-500">Comprador</dt><dd className="font-mono text-xs">{shipment.buyerId}</dd></div>
+           <div className="flex justify-between"><dt className="text-gray-500">Vendedor</dt><dd className="font-mono text-xs">{shipment.sellerId}</dd></div>
+           <div className="flex justify-between">
+             <dt className="text-gray-500">Repartidor</dt>
+             <dd className="font-mono text-xs">
+              {currentCourier ? currentCourier.name : "Sin asignar"}
+             </dd>
+           </div>
+           <div className="flex justify-between"><dt className="text-gray-500">Entrega estimada</dt><dd>{shipment.estimatedDelivery ? new Date(shipment.estimatedDelivery).toLocaleDateString("es-AR") : "—"}</dd></div>
+           <div className="flex justify-between"><dt className="text-gray-500">Creado</dt><dd>{new Date(shipment.createdAt).toLocaleString("es-AR")}</dd></div>
           </dl>
+        
         </div>
         <div className="rounded border border-gray-200 p-4">
           <h2 className="mb-2 text-sm font-semibold text-gray-700">Dirección de entrega</h2>
@@ -67,8 +89,19 @@ export default async function ShipmentDetailPage({
             {addr.country}
           </address>
         </div>
+
+       <section className="mb-6 rounded border border-gray-200 p-4">
+        <h2 className="mb-3 text-sm font-semibold text-gray-700">Asignar repartidor</h2>
+        <CourierAssignForm
+          shipmentId={shipment.id}
+          currentCourierId={shipment.courierId}
+          couriers={couriers}
+          locked={isLocked}
+         />
       </section>
 
+
+      </section>
       <section className="mb-6 rounded border border-gray-200 p-4">
         <h2 className="mb-3 text-sm font-semibold text-gray-700">Actualizar estado</h2>
         <StatusForm shipmentId={shipment.id} currentStatus={shipment.status} />
