@@ -6,7 +6,8 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { ShipmentStatus } from "@prisma/client";
-import { enableReview } from "@/lib/feedback-mock";
+import { enableReview } from "@/lib/feedback-client";
+
 
 const COURIER_ALLOWED_STATUSES = ["IN_TRANSIT", "DELIVERED", "ATTEMPT"] as const;
 
@@ -115,7 +116,7 @@ if (status === "ATTEMPT") {
       shipmentId: updated.id,
       buyerId: updated.buyerId,
       sellerId: updated.sellerId,
-      productIds: [],
+      productIds: updated.productIds,
       deliveredAt: new Date().toISOString(),
     });
   }

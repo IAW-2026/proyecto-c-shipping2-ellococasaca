@@ -22,6 +22,14 @@ const cities = [
   { city: "San Miguel de Tucuman", province: "Tucuman", postalCode: "4000" },
 ];
 
+const productSets = [
+  ["product_camiseta_titular_25", "product_short_negro"],
+  ["product_camiseta_arquero_22", "product_medias_blancas"],
+  ["product_buzo_rojo", "product_pantalon_largo"],
+  ["product_camiseta_retro_86", "product_short_blanco", "product_medias_rojas"],
+  ["product_remera_entrenamiento"],
+];
+
 // 15 envíos con diversidad de estados, vendedores, ciudades
 const shipmentsData = [
   { status: ShipmentStatus.DELIVERED, events: ["PENDING", "PREPARING", "SHIPPED", "IN_TRANSIT", "DELIVERED"] },
@@ -52,9 +60,10 @@ async function main() {
     const city = cities[i % cities.length];
     const buyer = buyers[i % buyers.length];
     const seller = sellers[i % sellers.length];
+    const products = productSets[i % productSets.length];
     const orderNum = 2001 + i;
 
-    // Timestamps escalonados de los últimos 10 días
+
     const baseDate = new Date(now - (i + 1) * 24 * 60 * 60 * 1000);
 
     await prisma.shipment.create({
@@ -63,6 +72,7 @@ async function main() {
         chargeId: `charge_${orderNum}`,
         buyerId: buyer,
         sellerId: seller,
+        productIds: products,
         status: s.status,
         trackingCode: `ARG-TRACK-${10000 + i}`,
         estimatedDelivery: new Date(now + 5 * 24 * 60 * 60 * 1000),

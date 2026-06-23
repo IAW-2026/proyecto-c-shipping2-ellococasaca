@@ -6,7 +6,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { ShipmentStatus } from "@prisma/client";
-import { enableReview } from "@/lib/feedback-mock";
+import { enableReview } from "@/lib/feedback-client";
+
 
 const STATUSES = ["PENDING", "PREPARING", "SHIPPED", "IN_TRANSIT", "DELIVERED", "CANCELED"] as const;
 
@@ -55,7 +56,7 @@ export async function updateShipmentStatus(
       shipmentId: updated.id,
       buyerId: updated.buyerId,
       sellerId: updated.sellerId,
-      productIds: [],
+      productIds: updated.productIds,
       deliveredAt: new Date().toISOString(),
     });
   }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ShipmentStatus } from "@prisma/client";
 import { z } from "zod";
-import { enableReview } from "@/lib/feedback-mock";
+import { enableReview } from "@/lib/feedback-client";
 
 const STATUSES = ["PENDING", "PREPARING", "SHIPPED", "IN_TRANSIT", "DELIVERED", "CANCELED"] as const;
 

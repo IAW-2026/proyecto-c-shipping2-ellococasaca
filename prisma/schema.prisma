@@ -22,6 +22,7 @@ model Shipment {
   buyerId           String          @map("buyer_id") 
   sellerId          String          @map("seller_id")  
   courierId         String?
+  productIds        String[]        @default([])
   status            ShipmentStatus  @default(PENDING)
   trackingCode      String          @unique @map("tracking_code")
   estimatedDelivery DateTime?       @map("estimated_delivery")

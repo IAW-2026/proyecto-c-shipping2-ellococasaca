@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma, ShipmentStatus } from "@prisma/client";
 import { z } from "zod";
 
-// GET /api/shipments  → listado con filtros + paginación
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
 
@@ -37,16 +37,14 @@ export async function GET(req: Request) {
   return NextResponse.json({ data: shipments, page, limit, total, totalPages: Math.ceil(total / limit) });
 }
 
-// POST /api/shipments  → crear envío (lo llama Payments tras un pago aprobado)
 const createShipmentSchema = z.object({
   orderId: z.string().min(1),
   chargeId: z.string().min(1).optional(),
   buyerId: z.string().min(1),
   sellerId: z.string().min(1),
-  items: z.array(z.object({
-    productId: z.string().min(1),
-    quantity: z.number().int().positive(),
-  })).optional(),
+  productIds: z                                             
+    .array(z.string().min(1))
+    .min(1, "productIds debe contener al menos un producto"),
   shippingAddress: z.object({
     street: z.string().min(1),
     city: z.string().min(1),
@@ -72,22 +70,22 @@ export async function POST(req: Request) {
     );
   }
 
-  const { orderId, chargeId, buyerId, sellerId, shippingAddress } = parsed.data;
+  const { orderId, chargeId, buyerId, sellerId, productIds, shippingAddress } = parsed.data;
 
   const trackingCode = `ARG-TRACK-${Date.now()}`;
   const estimatedDelivery = new Date();
   estimatedDelivery.setDate(estimatedDelivery.getDate() + 7);
 
-  const shipment = await prisma.shipment.create({
-    data: {
-      orderId, chargeId, buyerId, sellerId,
-      status: ShipmentStatus.PENDING,
-      trackingCode,
-      estimatedDelivery,
-      addressSnapshot: shippingAddress,
-      events: { create: [{ status: ShipmentStatus.PENDING, description: "Envío registrado" }] },
-    },
-  });
+const shipment = await prisma.shipment.create({
+  data: {
+    orderId, chargeId, buyerId, sellerId, productIds, 
+    status: ShipmentStatus.PENDING,
+    trackingCode,
+    estimatedDelivery,
+    addressSnapshot: shippingAddress,
+    events: { create: [{ status: ShipmentStatus.PENDING, description: "Envío registrado" }] },
+  },
+});
 
   return NextResponse.json(
     { shipmentId: shipment.id, status: shipment.status, estimatedDelivery: shipment.estimatedDelivery },
