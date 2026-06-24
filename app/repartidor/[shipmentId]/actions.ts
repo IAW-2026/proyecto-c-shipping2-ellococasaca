@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { ShipmentStatus } from "@prisma/client";
 import { enableReview } from "@/lib/feedback-client";
+import { releasePayment } from "@/lib/payments-client";
 
 
 const COURIER_ALLOWED_STATUSES = ["IN_TRANSIT", "DELIVERED", "ATTEMPT"] as const;
@@ -109,7 +110,7 @@ if (status === "ATTEMPT") {
     },
   });
 
-  // Si pasa a DELIVERED, dispara el mock de Feedback
+  
   if (status === ShipmentStatus.DELIVERED) {
     await enableReview({
       orderId: updated.orderId,
@@ -119,6 +120,13 @@ if (status === "ATTEMPT") {
       productIds: updated.productIds,
       deliveredAt: new Date().toISOString(),
     });
+
+    if (updated.chargeId) {
+      await releasePayment({
+        charge_id: updated.chargeId,
+        status: "approved",
+      });
+    }
   }
 
   revalidatePath(`/repartidor/${shipmentId}`);

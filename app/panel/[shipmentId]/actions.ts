@@ -1,12 +1,12 @@
 "use server";
 
-
 import { requireRole, listCouriers } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { ShipmentStatus } from "@prisma/client";
 import { enableReview } from "@/lib/feedback-client";
+import { releasePayment } from "@/lib/payments-client";
 
 
 const STATUSES = ["PENDING", "PREPARING", "SHIPPED", "IN_TRANSIT", "DELIVERED", "CANCELED"] as const;
@@ -59,14 +59,28 @@ export async function updateShipmentStatus(
       productIds: updated.productIds,
       deliveredAt: new Date().toISOString(),
     });
+
+    if (updated.chargeId) {
+      await releasePayment({
+        charge_id: updated.chargeId,
+        status: "approved",
+      });
+    }
+  }
+
+  if (status === ShipmentStatus.CANCELED) {
+    if (updated.chargeId) {
+      await releasePayment({
+        charge_id: updated.chargeId,
+        status: "rejected",
+      });
+    }
   }
 
   revalidatePath(`/panel/${shipmentId}`);
   revalidatePath("/panel");
   return { success: `Estado actualizado a ${status}` };
 }
-
-// ============== Asignación de repartidor ==============
 
 const NON_REASSIGNABLE_STATUSES: ShipmentStatus[] = [
   "IN_TRANSIT",
