@@ -29,6 +29,7 @@ export async function GET(req: Request) {
       select: {
         id: true, orderId: true, buyerId: true, sellerId: true,
         status: true, trackingCode: true, estimatedDelivery: true, updatedAt: true,
+        courierId: true,
       },
     }),
     prisma.shipment.count({ where }),
