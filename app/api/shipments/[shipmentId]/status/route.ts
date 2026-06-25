@@ -37,7 +37,6 @@ export async function PATCH(
     return NextResponse.json({ error: "Envío no encontrado" }, { status: 404 });
   }
 
-  // Actualizamos el estado y dejamos registrado el evento en el historial
   const updated = await prisma.shipment.update({
     where: { id: shipmentId },
     data: {
@@ -48,7 +47,6 @@ export async function PATCH(
     },
   });
 
-  // Si pasó a DELIVERED, avisamos a Feedback (MOCK en Etapa 2)
   let feedback = null;
   if (status === ShipmentStatus.DELIVERED) {
     feedback = await enableReview({
@@ -56,7 +54,7 @@ export async function PATCH(
       shipmentId: updated.id,
       buyerId: updated.buyerId,
       sellerId: updated.sellerId,
-      productIds: [], // en Etapa 3 vendrán los productos reales del pedido
+      productIds: [],
       deliveredAt: new Date().toISOString(),
     });
   }
