@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { ShipmentStatus } from "@prisma/client";
 import { enableReview } from "@/lib/feedback-client";
 import { releasePayment } from "@/lib/payments-client";
+import { notifySellerStatus } from "@/lib/seller-client";
 
 
 const STATUSES = ["PENDING", "PREPARING", "SHIPPED", "IN_TRANSIT", "DELIVERED", "CANCELED"] as const;
@@ -49,6 +50,9 @@ export async function updateShipmentStatus(
       },
     },
   });
+
+  // Avisar a Seller del nuevo estado (no bloquea: si falla, loguea y sigue)
+  await notifySellerStatus({ orderId: updated.orderId, status: updated.status });
 
   if (status === ShipmentStatus.DELIVERED) {
     await enableReview({
