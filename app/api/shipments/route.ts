@@ -64,7 +64,6 @@ export async function POST(req: Request) {
         secret ? "header presente pero no coincide" : "sin header"
       }`
     );
-    // MODO ESTRICTO (activo después de confirmar el payment de Simon):!!!!!!!!!!!!!!!!!!!!
      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
