@@ -56,6 +56,18 @@ const createShipmentSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  // Validación del secret entre servicios (MODO TOLERANTE: loguea, no rechaza todavía) totalmente gaga
+  const secret = req.headers.get("x-inter-service-secret");
+  if (secret !== process.env.INTER_SERVICE_SECRET) {
+    console.warn(
+      `[SECURITY] POST /api/shipments SIN secret válido (por ahora se permite) — ${
+        secret ? "header presente pero no coincide" : "sin header"
+      }`
+    );
+    // MODO ESTRICTO (activo después de confirmar el payment de Simon):!!!!!!!!!!!!!!!!!!!!
+     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();

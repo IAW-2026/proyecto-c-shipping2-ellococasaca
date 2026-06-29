@@ -17,13 +17,18 @@ const FEEDBACK_API_URL =
   process.env.FEEDBACK_API_URL ??
   "https://proyecto-web-feedback-ellococasaca.vercel.app";
 
+const INTER_SERVICE_SECRET = process.env.INTER_SERVICE_SECRET ?? "";
+
 export async function enableReview(payload: EnableReviewPayload) {
   const url = `${FEEDBACK_API_URL}/api/reviews/enable`;
 
   try {
     const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-inter-service-secret": INTER_SERVICE_SECRET,
+      },
       body: JSON.stringify(payload),
     });
 
