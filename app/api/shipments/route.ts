@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma, ShipmentStatus } from "@prisma/client";
 import { z } from "zod";
+import { checkInterServiceSecret } from "@/lib/inter-service";
 
 
 export async function GET(req: Request) {
+
+  if (!checkInterServiceSecret(req)) {
+    console.warn("[SECURITY] GET /api/shipments SIN secret válido (por ahora se permite)");
+    // MODO ESTRICTO (activar en el Paso 5, cuando todos manden el header):
+    // return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
   const { searchParams } = new URL(req.url);
 
   const sellerId = searchParams.get("sellerId") ?? undefined;
@@ -56,15 +63,9 @@ const createShipmentSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  // Validación del secret entre servicios (MODO TOLERANTE: loguea, no rechaza todavía) totalmente gaga
-  const secret = req.headers.get("x-inter-service-secret");
-  if (secret !== process.env.INTER_SERVICE_SECRET) {
-    console.warn(
-      `[SECURITY] POST /api/shipments SIN secret válido (por ahora se permite) — ${
-        secret ? "header presente pero no coincide" : "sin header"
-      }`
-    );
-     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  // Validación del secret entre servicios (MODO ESTRICTO: rechaza sin secret válido)
+  if (!checkInterServiceSecret(req)) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   let body: unknown;
